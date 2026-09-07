@@ -25,13 +25,19 @@ export default function App() {
   const [backendStatus, setBackendStatus] = useState('checking');
 
   useEffect(() => {
-    checkBackendHealth().then((res) => {
-      if (res && res.status === 'healthy') {
-        setBackendStatus('online');
-      } else {
-        setBackendStatus('offline');
+    let isMounted = true;
+    const verifyHealth = async () => {
+      const res = await checkBackendHealth();
+      if (isMounted) {
+        setBackendStatus(res && res.status === 'healthy' ? 'online' : 'offline');
       }
-    });
+    };
+    verifyHealth();
+    const interval = setInterval(verifyHealth, 3000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const handleVerify = async () => {
